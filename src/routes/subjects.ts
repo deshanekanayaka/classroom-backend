@@ -12,8 +12,8 @@ router.get('/', async (req, res) => {
     const {search, department, page= 1, limit=10} = req.query;
 
     // Get access to current page
-    const currentPage = Math.max(1, +page);
-    const limitPerPage = Math.max(1, +limit);
+    const currentPage = Math.max(1, Number(page) || 1);
+    const limitPerPage = Math.max(1, Number(limit) || 10);
     // Offset = how many records to skip
     const offset = (currentPage - 1) * limitPerPage;
 
