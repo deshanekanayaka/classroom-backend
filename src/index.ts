@@ -1,4 +1,6 @@
 import express from 'express';
+import subjectsRouter from "./routes/subjects";
+import cors from "cors";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8000;
@@ -6,6 +8,19 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 8000;
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+if (!process.env.FRONTEND_URL) {
+    console.warn("FRONTEND_URL is not set; CORS will block all cross-origin requests");
+}
+
+// CORS
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}))
+
+// Router for subjects
+app.use('/api/subjects', subjectsRouter)
 // Root route
 app.get('/', (req, res) => {
   res.send('Classroom backend is running');
