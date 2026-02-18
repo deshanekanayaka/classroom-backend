@@ -1,6 +1,7 @@
 import express from 'express';
 import subjectsRouter from "./routes/subjects";
 import cors from "cors";
+import securityMiddleware from "./middleware/security";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8000;
@@ -21,6 +22,10 @@ app.use(cors({
 
 // Router for subjects
 app.use('/api/subjects', subjectsRouter)
+
+// Security Middleware
+app.use(securityMiddleware);
+
 // Root route
 app.get('/', (req, res) => {
   res.send('Classroom backend is running');
