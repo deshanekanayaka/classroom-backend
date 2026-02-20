@@ -2,6 +2,8 @@ import express from 'express';
 import subjectsRouter from "./routes/subjects";
 import cors from "cors";
 import securityMiddleware from "./middleware/security";
+import {toNodeHandler} from "better-auth/node";
+import {auth} from "./lib/auth";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8000;
@@ -19,6 +21,8 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }))
+
+app.all('/api/auth/*splat', toNodeHandler(auth));
 
 // Router for subjects
 app.use('/api/subjects', subjectsRouter)

@@ -69,11 +69,11 @@ const securityMiddleware = async  (req: Request,
             });
         }
 
-        if(decision.isDenied() && decision.reason.isRateLimit()) {
-            return res.status(403).json({
-                error: "Too many requests are not allowed", message
-            });
-        }
+               if (decision.isDenied() && decision.reason.isRateLimit()) {
+                       return res.status(429).json({
+                              error: "Too Many Requests", message,
+                       });
+               }
         next();
     } catch (e) {
         console.error('Arcjet Middleware error ' , e);
