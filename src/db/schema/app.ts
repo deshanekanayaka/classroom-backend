@@ -3,11 +3,13 @@ import {
     integer,
     jsonb,
     index,
-    uniqueIndex,
     pgEnum,
     pgTable,
+    primaryKey,
     text,
     timestamp,
+    unique,
+    uniqueIndex,
     varchar,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
@@ -30,8 +32,7 @@ export const departments = pgTable("departments", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     code: varchar("code", { length: 50 }).notNull().unique(),
     name: varchar("name", { length: 255 }).notNull(),
-    description: text("description"),
-
+    description: varchar("description", { length: 255 }), // varchar to match instructor
     ...timestamps,
 });
 
@@ -44,7 +45,7 @@ export const subjects = pgTable("subjects", {
 
     name: varchar("name", { length: 255 }).notNull(),
     code: varchar("code", { length: 50 }).notNull().unique(),
-    description: text("description"),
+    description: varchar("description", { length: 255 }), // varchar to match instructor
 
     ...timestamps,
 });
@@ -62,28 +63,27 @@ export const classes = pgTable(
             .notNull()
             .references(() => user.id, { onDelete: "restrict" }),
 
-        inviteCode: varchar("invite_code", { length: 50 }).notNull().unique(),
+        inviteCode: text("invite_code").notNull().unique(), // text to match instructor
         name: varchar("name", { length: 255 }).notNull(),
         bannerCldPubId: text("banner_cld_pub_id"),
         bannerUrl: text("banner_url"),
         description: text("description"),
         capacity: integer("capacity").notNull().default(50),
         status: classStatusEnum("status").notNull().default("active"),
-        schedules: jsonb("schedules").array().$type<unknown[]>(),
+        schedules: jsonb("schedules").$type<any[]>().default([]).notNull(), // non-nullable with default
 
         ...timestamps,
     },
-    (table) => ({
-        subjectIdIdx: index("classes_subject_id_idx").on(table.subjectId),
-        teacherIdIdx: index("classes_teacher_id_idx").on(table.teacherId),
-    })
+    (table) => [
+        index("classes_subject_id_idx").on(table.subjectId),
+        index("classes_teacher_id_idx").on(table.teacherId),
+    ]
 );
 
 export const enrollments = pgTable(
     "enrollments",
     {
-        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-
+        // No separate id column — composite PK to match instructor
         studentId: text("student_id")
             .notNull()
             .references(() => user.id, { onDelete: "cascade" }),
@@ -94,17 +94,15 @@ export const enrollments = pgTable(
 
         ...timestamps,
     },
-    (table) => ({
-        studentClassUnique: uniqueIndex("enrollments_student_id_class_id_key").on(
-            table.studentId,
-            table.classId
-        ),
-        studentIdIdx: index("enrollments_student_id_idx").on(table.studentId),
-        classIdIdx: index("enrollments_class_id_idx").on(table.classId),
-    })
+    (table) => [
+        primaryKey({ columns: [table.studentId, table.classId] }),
+        unique("enrollments_student_id_class_id_unique").on(table.studentId, table.classId),
+        index("enrollments_student_id_idx").on(table.studentId),
+        index("enrollments_class_id_idx").on(table.classId),
+    ]
 );
 
-//One department can have many subjects
+// Relations
 export const departmentsRelations = relations(departments, ({ many }) => ({
     subjects: many(subjects),
 }));
@@ -140,7 +138,7 @@ export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
     }),
 }));
 
-// To make the app types stay in sync with the database- autogenerates types based on db schema
+// Types
 export type Department = typeof departments.$inferSelect;
 export type NewDepartment = typeof departments.$inferInsert;
 

@@ -15,6 +15,27 @@
       "when": 1771413194642,
       "tag": "0001_next_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771546906551,
+      "tag": "0002_square_sister_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771600340200,
+      "tag": "0003_smooth_nextwave",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771601165765,
+      "tag": "0004_daffy_mimic",
+      "breakpoints": true
     }
   ]
 }
