@@ -3,6 +3,8 @@ AgentAPI.config();
 
 import express from 'express';
 import subjectsRouter from "./routes/subjects.js";
+import usersRouter from "./routes/users.js";
+import classesRouter from "./routes/classes.js";
 import cors from "cors";
 import securityMiddleware from "./middleware/security.js";
 import {toNodeHandler} from "better-auth/node";
@@ -30,6 +32,11 @@ app.all('/api/auth/*splat', toNodeHandler(auth));
 // Router for subjects
 app.use('/api/subjects', subjectsRouter)
 
+//Router for users
+app.use('/api/users', usersRouter)
+
+// Router for classes
+app.use('/api/classes', classesRouter)
 // Security Middleware
 app.use(securityMiddleware);
 
