@@ -1,60 +1,3 @@
-// import express from "express";
-// import { db } from "../db/index.js";
-// import { classes } from "../db/schema/index.js";
-//
-// const router = express.Router();
-//
-// router.post("/", async (req, res) => {
-//   try {
-//     // Destructuring properties from the form coming from frontend
-//     const {
-//       name,
-//       teacherId,
-//       subjectId,
-//       capacity,
-//       description,
-//       status,
-//       bannerUrl,
-//       bannerCldPubId,
-//     } = req.body ?? {};
-//
-//     // Basic validation for required fields
-//     if (!name || !teacherId || !subjectId) {
-//       return res.status(400).json({
-//         error: "Missing required fields",
-//         details: {
-//           name: !name ? "Required" : undefined,
-//           teacherId: !teacherId ? "Required" : undefined,
-//           subjectId: !subjectId ? "Required" : undefined,
-//         },
-//       });
-//     }
-//
-//     const [createdClass] = await db
-//       .insert(classes)
-//       .values({
-//         subjectId,
-//         inviteCode: Math.random().toString(36).substring(2, 9),
-//         name,
-//         teacherId,
-//         bannerCldPubId: bannerCldPubId ?? null,
-//         bannerUrl: bannerUrl ?? null,
-//         capacity: capacity ?? null,
-//         description: description ?? null,
-//         schedules: [],
-//         status: status ?? "ACTIVE",
-//       })
-//       .returning({ id: classes.id });
-//
-//     return res.status(201).json({ id: createdClass.id });
-//   } catch (e: any) {
-//     console.error("POST /api/classes error:", e);
-//     return res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
-//
-// export default router;
-
 import express from "express";
 import { and, desc, eq, getTableColumns, ilike, or, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
@@ -134,6 +77,41 @@ router.get("/", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch classes" });
     }
 });
+
+// Get class details with teacher, subject and department
+//id is dynamic
+router.get("/:id", async (req, res) => {
+
+    const classId = Number(req.params.id);
+
+    //If classId is not a number
+    if (!Number.isFinite(classId)) return res.status(400).json({error: "No class found"});
+
+    //Destructure the class details from an array
+    const [classDetails] = await db
+        .select({
+            ...getTableColumns(classes),
+            subject: {
+                ...getTableColumns(subjects),
+            },
+            department: {
+                ...getTableColumns(departments),
+            },
+            teacher: {
+                ...getTableColumns(user),
+            }
+        })
+        .from(classes)
+        .leftJoin(subjects, eq(classes.subjectId, subjects.id))
+        .leftJoin(user, eq(classes.teacherId, user.id))
+        .leftJoin(departments, eq(subjects.departmentId, departments.id))
+        .where(eq(classes.id, classId)) //looking for the classid that matches the class id we are looking for.
+
+    if(!classDetails) return res.status(404).json({error: "No class found"});
+    res.status(200).json({
+        data: classDetails,
+    })
+})
 
 router.post("/", async (req, res) => {
     try {
